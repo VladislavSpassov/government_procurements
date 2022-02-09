@@ -62,7 +62,9 @@ contract BusinessOffers{
         address payable businessWallet;
         Offer[] offers; 
     }
-    mapping(address => Business) businessToOffers;
+    mapping(address => Offers) businessToOffers;
+    mapping(uint => Offer) offers;
+    mapping(uint => Offer[]) procurementsToOffers;
     uint offerId;
     struct Offer {        
         uint256 id;
@@ -80,7 +82,17 @@ contract BusinessOffers{
         currentYear = getCurrentYear(block.timestamp);
         currentMonth = getCurrentMonth(block.timestamp);
         currentDay = getCurrentDay(block.timestamp);
-        offers.push(Offer(offerId, priceOffer, procurementId));
+        require(currentYear >= govProc.getProcurement(procurementId).offersDeadline.startDate.year, "Offers deadline has not started yet");
+        require(currentYear <= govProc.getProcurement(procurementId).offersDeadline.endDate.year, "Offers deadline has ended");
+        require(currentMonth >= govProc.getProcurement(procurementId).offersDeadline.startDate.month, "Offers deadline has not started yet");
+        require(currentMonth <= govProc.getProcurement(procurementId).offersDeadline.endDate.month, "Offers deadline has ended");
+        require(currentDay >= govProc.getProcurement(procurementId).offersDeadline.startDate.day, "Offers deadline has not started yet");
+        require(currentDay <= govProc.getProcurement(procurementId).offersDeadline.endDate.day, "Offers deadline has ended");
+        require(govProc.getProcurement(procurementId).budget <= priceOffer, "Price is higher than budget");
+
+        offer = Offer(offerId, priceOffer, procurementId);
+        offers[offerId] = offer;
+        procurementIdToOffers[procurementId].push(offer);
         offerId++;
     }
 
